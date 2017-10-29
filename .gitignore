@@ -1,6 +1,7 @@
 .DS_Store
 **/logs
 **/.ropeproject
+cifar-10/
 
 # Ignore the downloaded dataset that the CIFAR10 module places in the runtime dir
 **/dataset

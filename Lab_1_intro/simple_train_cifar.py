@@ -37,7 +37,7 @@ tf.app.flags.DEFINE_integer('save-model', 1000,
 
 # Optimisation hyperparameters
 tf.app.flags.DEFINE_integer('batch-size', 128, 'Number of examples per mini-batch (default: %(default)d)')
-tf.app.flags.DEFINE_float('learning-rate', 1e-4, 'Number of examples to run. (default: %(default)d)')
+tf.app.flags.DEFINE_float('learning-rate', 4e-5, 'Number of examples to run. (default: %(default)d)')
 tf.app.flags.DEFINE_integer('img-width', 32, 'Image width (default: %(default)d)')
 tf.app.flags.DEFINE_integer('img-height', 32, 'Image height (default: %(default)d)')
 tf.app.flags.DEFINE_integer('img-channels', 3, 'Image channels (default: %(default)d)')
@@ -88,21 +88,32 @@ def deepnn(x):
         # Second pooling layer.
         h_pool2 = max_pool_2x2(h_conv2)
 
+    with tf.variable_scope('Conv_3'):
+	W_conv3 = weight_variable([5,5,64,64])
+	b_conv3 = bias_variable([64])
+	h_pool3 = tf.nn.relu(conv2d(h_pool2,W_conv3) + b_conv3) 
+
+
     with tf.variable_scope('FC_1'):
         # Fully connected layer 1 -- after 2 round of downsampling, our 32x32
         # image is down to 8x8x64 feature maps -- maps this to 1024 features.
         W_fc1 = weight_variable([8 * 8 * 64, 1024])
         b_fc1 = bias_variable([1024])
 
-        h_pool2_flat = tf.reshape(h_pool2, [-1, 8*8*64])
+        h_pool2_flat = tf.reshape(h_pool3, [-1, 8*8*64])
         h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+    
+    with tf.variable_scope('FC_3'):
+	W_fc3 = weight_variable([8 * 8 * 64, 1024])
+	b_fc3 = bias_variable([1024])
 
+	h_fc3 = tf.nn.relu(tf.matmul(tf.transpose(h_fc1), W_fc3) + b_fc3)
     with tf.variable_scope('FC_2'):
         # Map the 1024 features to 10 classes
         W_fc2 = weight_variable([1024, FLAGS.num_classes])
         b_fc2 = bias_variable([FLAGS.num_classes])
 
-        y_conv = tf.matmul(h_fc1, W_fc2) + b_fc2
+        y_conv = tf.matmul(h_fc3, W_fc2) + b_fc2
         return y_conv, img_summary
 
 
